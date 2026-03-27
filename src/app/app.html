@@ -1,0 +1,278 @@
+﻿
+
+<div class="app">
+
+  <!-- Page header  -->
+  <header class="app-header">
+    <h1>Old Phone Pad</h1>
+    <p>T9-style keypad decoder &mdash; press the keys or type a sequence directly</p>
+  </header>
+
+  <main class="app-body">
+
+    <!-- ==================================================================
+         LEFT COLUMN: the simulated phone
+         ================================================================== -->
+    <section class="phone-section">
+      <div class="phone">
+
+        <!-- Cosmetic speaker dots at the top of the phone -->
+        <div class="phone-speaker">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <!-- ---------------------------------------------------------------
+             LCD SCREEN
+             The screen shows two lines:
+               INPUT  — the raw key sequence the user has typed so far
+               OUTPUT — the decoded text (live, as they type)
+             --------------------------------------------------------------- -->
+        <div class="phone-screen">
+
+          <!-- Input display: shows the raw sequence (e.g. "4433555 555666") -->
+          <!-- inputSequenceDisplay() truncates very long sequences with '...' -->
+          <div class="screen-block">
+            <div class="screen-label">INPUT</div>
+            <div class="screen-value screen-seq">{{ inputSequenceDisplay() || "&mdash;" }}</div>
+          </div>
+
+          <div class="screen-divider"></div>
+
+          <!-- Output display: shows the decoded text (e.g. "HELLO") -->
+          <!--
+            displayOutput() returns { done: string, active: string }
+              `done`   = the committed letters so far
+              `active` = the letter currently being cycled (still changing)
+          -->
+          <div class="screen-block">
+            <div class="screen-label">OUTPUT</div>
+            <div class="screen-value screen-out">
+              <!-- Committed characters — rendered as plain text -->
+              <span>{{ displayOutput().done }}</span>
+
+              <!-- The character still being cycled — underlined highlight -->
+              @if (displayOutput().active) {
+                <span class="cycling-char">{{ displayOutput().active }}</span>
+              }
+
+              <!-- Placeholder dash when nothing has been typed yet -->
+              @if (!displayOutput().done && !displayOutput().active && !inputSequence()) {
+                <span class="screen-placeholder">&mdash;</span>
+              }
+
+              <!-- Blinking cursor: visible while a key is being cycled and
+                   the user has not yet pressed SEND (#) -->
+              @if (currentPreview() && !isSent()) {
+                <span class="cursor-blink"></span>
+              }
+            </div>
+          </div>
+
+          <!-- Footer hint: changes depending on state -->
+          <div class="screen-footer">
+            @if (isSent()) {
+              <!-- Show a green checkmark after # was pressed -->
+              <span class="hint hint--sent">&#10003; SENT</span>
+            } @else if (inputSequence()) {
+              <!-- Remind the user to press # once they're done typing -->
+              <span class="hint">Press # to SEND</span>
+            }
+          </div>
+
+        </div>
+        <!-- / phone-screen -->
+
+        <!-- ---------------------------------------------------------------
+             KEYPAD
+             Rendered from the `keypadButtons` array in the component.
+             Each button fires pressKey(btn.key) on click.
+             --------------------------------------------------------------- -->
+        <div class="keypad">
+          @for (btn of keypadButtons; track btn.key) {
+            <button
+              class="key-btn"
+              [class.key-btn--pressed]="pressedKey() === btn.key"
+              [class.key-btn--send]="btn.key === '#'"
+              [class.key-btn--back]="btn.key === '*'"
+              [disabled]="isSent() && btn.key !== '#' && btn.key !== '*'"
+              (click)="pressKey(btn.key)"
+              [attr.aria-label]="btn.label + (btn.sub ? ' ' + btn.sub : '')"
+            >
+              <!-- Large digit / symbol -->
+              <span class="key-number">{{ btn.label }}</span>
+              <!-- Small letter hint below the number (e.g. "ABC", "DEF" ...) -->
+              @if (btn.sub) {
+                <span class="key-letters">{{ btn.sub }}</span>
+              }
+            </button>
+          }
+        </div>
+        <!-- / keypad -->
+
+        <!-- CLEAR button — resets everything back to a blank phone -->
+        <button class="clear-btn" (click)="clearInput()">C L E A R</button>
+
+      </div>
+    </section>
+    <!-- / phone-section -->
+
+    <!-- ==================================================================
+         RIGHT COLUMN: information and tooling
+         ================================================================== -->
+    <section class="info-section">
+
+      <!-- -----------------------------------------------------------------
+           CARD 1: Manual Input
+           Let the user type a raw sequence by keyboard instead of clicking
+           the phone buttons.  Useful for quickly testing custom inputs.
+           ----------------------------------------------------------------- -->
+      <div class="card">
+        <h2>Manual Input</h2>
+        <p class="card-desc">
+          Paste or type a sequence &mdash; <code>#</code> is appended automatically if omitted
+        </p>
+
+        <div class="manual-group">
+          <!--
+            Two-way binding pattern with signals:
+              [value]="manualInput()"       reads the signal value
+              (input)="onManualInput($event)" writes to the signal on each keystroke
+            This is the Angular signals equivalent of [(ngModel)].
+            
+            (keydown.enter) lets the user press Enter to decode without clicking
+            the button — standard UX expectation for a single-line form.
+          -->
+          <input
+            class="manual-inp"
+            type="text"
+            placeholder="e.g. 4433555 555666#"
+            [value]="manualInput()"
+            (input)="onManualInput($event)"
+            (keydown.enter)="decodeManual()"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <button class="decode-btn" (click)="decodeManual()">Decode</button>
+        </div>
+
+        <!--
+          Only show the result row once the user has clicked Decode.
+          manualOutput() is null until then, '' after decoding empty input.
+          The @if guards against showing an empty result prematurely.
+        -->
+        @if (manualError()) {
+          <div class="manual-error">
+            <span>&#9888; {{ manualError() }}</span>
+          </div>
+        }
+        @if (manualOutput() !== null) {
+          <div class="manual-result">
+            <span class="result-label">Result</span>
+            <span class="result-value">"{{ manualOutput() }}"</span>
+          </div>
+        }
+      </div>
+
+      <!-- -----------------------------------------------------------------
+           CARD 2: Key Mapping Reference Table
+           A visual cheat-sheet showing which letters each key produces
+           depending on how many times it is pressed.
+
+           The "1x", "2x", "3x", "4x" column headers correspond to
+           press-count, so:
+             Press key 2 once (1x)  -> A
+             Press key 2 twice (2x) -> B
+             etc.
+
+           Short rows (fewer than maxPresses letters) are padded with "—"
+           cells using getPadding() so every row has the same column width.
+           ----------------------------------------------------------------- -->
+      <div class="card">
+        <h2>Key Mapping Reference</h2>
+        <table class="mapping-table" aria-label="Phone key to letter mapping">
+          <thead>
+            <tr>
+              <th scope="col">Key</th>
+              <th scope="col">1&times;</th>
+              <th scope="col">2&times;</th>
+              <th scope="col">3&times;</th>
+              <th scope="col">4&times;</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!--
+              Iterate over conversionRows — each row is { key, letters[] }.
+              For each row we render one <td> per letter, then fill the rest
+              of the row with empty cells so the table stays aligned.
+            -->
+            @for (row of conversionRows; track row.key) {
+              <tr>
+                <td class="td-key">{{ row.key }}</td>
+                @for (letter of row.letters; track letter) {
+                  <td class="td-letter">{{ letter }}</td>
+                }
+                <!-- Pad short rows with placeholder cells -->
+                @for (_ of getPadding(row.letters.length); track $index) {
+                  <td class="td-letter td-empty">&mdash;</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+        <p class="table-note">Pressing a key more than its max wraps back to the first letter.</p>
+      </div>
+
+      <!-- -----------------------------------------------------------------
+           CARD 3: Test Cases
+           Shows all the predefined test cases.  Clicking "Run All Tests"
+           calls runAllTests() which runs each input through OldPhonePad()
+           and marks each with PASS or FAIL.
+
+           Before running, `tc.result` is undefined, so no badge is shown.
+           After running, `tc.passed` controls which badge variant appears.
+           ----------------------------------------------------------------- -->
+      <div class="card">
+        <h2>Test Cases</h2>
+        <button class="run-btn" (click)="runAllTests()">&#9654; Run All Tests</button>
+
+        <div class="test-list" role="list">
+          <!--
+            Note: testCases is a signal, so testCases() reads its current value.
+            After runAllTests() updates the signal, Angular automatically
+            re-renders this list — no manual refresh needed.
+          -->
+          @for (tc of testCases(); track tc.input) {
+            <div
+              class="test-item"
+              role="listitem"
+              [class.test-pass]="tc.passed === true"
+              [class.test-fail]="tc.passed === false"
+            >
+              <!-- The call expression as it would appear in code -->
+              <code class="test-code">OldPhonePad("{{ tc.input }}")</code>
+              <span class="test-arrow">&#8594;</span>
+              <!-- The expected / correct output quoted -->
+              <code class="test-expected">"{{ tc.expected }}"</code>
+
+              <!--
+                Badge only shown after runAllTests() has populated tc.result.
+                We check `tc.result !== undefined` (not just !tc.result) because
+                an empty string result is still a valid (truthy-absent) outcome.
+              -->
+              @if (tc.result !== undefined) {
+                @if (tc.passed) {
+                  <span class="badge badge-pass">&#10003; PASS</span>
+                } @else {
+                  <span class="badge badge-fail">&#10007; FAIL &mdash; got "{{ tc.result }}"</span>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+    </section>
+    <!-- / info-section -->
+
+  </main>
+</div>

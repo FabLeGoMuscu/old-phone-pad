@@ -1,0 +1,524 @@
+// ─── App shell ────────────────────────────────────────────────────────────────
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0d0d1a;
+  color: #cbd5e1;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.app-header {
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+  border-bottom: 1px solid #22223a;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #4ade80;
+    text-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+  }
+
+  p {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+
+  @media (max-width: 780px) {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+// ─── Phone ─────────────────────────────────────────────────────────────────────
+.phone-section {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.phone {
+  background: linear-gradient(160deg, #1e1e32 0%, #151524 100%);
+  border-radius: 32px;
+  padding: 22px 18px 28px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow:
+    0 0 0 1px #2a2a42,
+    0 8px 40px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.phone-speaker {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: -4px;
+
+  span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #2a2a42;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Screen ──────────────────────────────────────────────────────────────────────
+.phone-screen {
+  background: #071a07;
+  border-radius: 10px;
+  border: 1px solid #0c2c0c;
+  padding: 12px 14px 10px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(51, 255, 51, 0.04);
+}
+
+.screen-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.screen-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+  color: #1a6020;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.screen-value {
+  min-height: 1.25em;
+  color: #33ff33;
+  word-break: break-all;
+
+  &.screen-seq {
+    font-size: 0.68rem;
+    color: #1f9c1f;
+    letter-spacing: 0.05em;
+  }
+
+  &.screen-out {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+  }
+}
+
+.cycling-char {
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-style: solid;
+}
+
+.screen-placeholder {
+  color: #1a5020;
+}
+
+// Blinking text cursor shown while a key's character is being cycled
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #33ff33;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  animation: blink 0.9s step-end infinite;
+}
+
+.screen-divider {
+  height: 1px;
+  background: #0c2e0c;
+  margin: 2px 0;
+}
+
+.screen-footer {
+  margin-top: auto;
+  text-align: right;
+  min-height: 1em;
+}
+
+.hint {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: #1f7020;
+
+  &.hint--sent {
+    color: #4ade80;
+  }
+}
+
+// Keypad ──────────────────────────────────────────────────────────────────────
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.key-btn {
+  background: #252540;
+  border: 1px solid #2e2e4a;
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 4px 7px;
+  gap: 2px;
+  min-height: 54px;
+  transition: background 0.08s, transform 0.08s;
+  box-shadow: 0 2px 0 #18182e;
+  user-select: none;
+
+  &:hover {
+    background: #2f2f52;
+    border-color: #3c3c60;
+  }
+
+  &:active,
+  &.key-btn--pressed {
+    background: #3d3d6a;
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.key-btn--send {
+    background: #0e2b0e;
+    border-color: #184018;
+    color: #4ade80;
+
+    &:hover { background: #163d16; }
+    &:active, &.key-btn--pressed { background: #1f521f; }
+  }
+
+  &.key-btn--back {
+    background: #2b0e0e;
+    border-color: #401818;
+    color: #f87171;
+
+    &:hover { background: #3d1616; }
+    &:active, &.key-btn--pressed { background: #521f1f; }
+  }
+}
+
+.key-number {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.key-letters {
+  font-size: 0.48rem;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.clear-btn {
+  background: transparent;
+  border: 1px solid #2a2a42;
+  border-radius: 6px;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  padding: 7px;
+  width: 100%;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  &:hover {
+    background: #1a1a2e;
+    color: #94a3b8;
+    border-color: #3c3c60;
+  }
+}
+
+// ─── Info column ───────────────────────────────────────────────────────────────
+.info-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.card {
+  background: #12122a;
+  border: 1px solid #22223a;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+
+  h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #4ade80;
+    margin-bottom: 0.65rem;
+  }
+
+  .card-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+
+    code {
+      color: #94a3b8;
+      background: #1c1c3a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 0.78rem;
+    }
+  }
+}
+
+// Manual input ─────────────────────────────────────────────────────────────────
+.manual-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.manual-inp {
+  flex: 1;
+  background: #0d0d1a;
+  border: 1px solid #22223a;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.825rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder { color: #2e2e50; }
+
+  &:focus {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.12);
+  }
+}
+
+.decode-btn {
+  background: #0e2b0e;
+  border: 1px solid #184018;
+  border-radius: 6px;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+  transition: background 0.12s;
+
+  &:hover { background: #163d16; }
+  &:active { background: #1f521f; }
+}
+
+.manual-error {
+  margin-top: 0.75rem;
+  background: #1a0d0d;
+  border: 1px solid #3a1e1e;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: #f87171;
+  font-size: 0.82rem;
+}
+
+.manual-result {
+  margin-top: 0.75rem;
+  background: #0d0d1a;
+  border: 1px solid #1e1e36;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.result-label {
+  font-size: 0.68rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+
+.result-value {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  color: #4ade80;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+// Key Mapping Table ────────────────────────────────────────────────────────────
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+
+  th {
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.65rem;
+    text-align: center;
+    padding: 5px 8px;
+    border-bottom: 1px solid #22223a;
+  }
+
+  td {
+    text-align: center;
+    padding: 4px 8px;
+    border-bottom: 1px solid #18182a;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .td-key {
+    background: #1e1e38;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    padding: 4px 10px;
+  }
+
+  .td-letter {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 600;
+    color: #33ff33;
+    font-size: 0.85rem;
+  }
+
+  .td-empty {
+    color: #22223a;
+  }
+}
+
+.table-note {
+  font-size: 0.72rem;
+  color: #475569;
+  margin-top: 0.2rem;
+}
+
+// Test Cases ───────────────────────────────────────────────────────────────────
+.run-btn {
+  background: #0e2b0e;
+  border: 1px solid #184018;
+  border-radius: 6px;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0.4rem 1rem;
+  margin-bottom: 0.75rem;
+  transition: background 0.12s;
+
+  &:hover { background: #163d16; }
+  &:active { background: #1f521f; }
+}
+
+.test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.test-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  background: #0d0d1a;
+  border: 1px solid #1a1a2e;
+  transition: border-color 0.15s;
+
+  &.test-pass {
+    border-color: rgba(34, 197, 94, 0.28);
+    background: rgba(34, 197, 94, 0.03);
+  }
+
+  &.test-fail {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.03);
+  }
+}
+
+.test-code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  word-break: break-all;
+}
+
+.test-arrow {
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+.test-expected {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &.badge-pass {
+    background: rgba(34, 197, 94, 0.14);
+    color: #22c55e;
+  }
+
+  &.badge-fail {
+    background: rgba(239, 68, 68, 0.14);
+    color: #ef4444;
+  }
+}
