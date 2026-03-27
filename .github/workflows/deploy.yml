@@ -1,0 +1,70 @@
+# .github/workflows/deploy.yml
+#
+# Builds the Angular app and deploys it to GitHub Pages automatically
+# on every push to the main branch.
+#
+# How it works:
+#   1. Checkout the code
+#   2. Set up Node 20
+#   3. Install dependencies (npm ci — faster & reproducible)
+#   4. Build with --base-href set to the repo name so routing works on Pages
+#   5. Upload the dist folder as a Pages artifact
+#   6. Deploy to GitHub Pages
+#
+# To enable Pages in your repo:
+#   Settings → Pages → Source: "GitHub Actions"
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+# Allow the workflow to write to Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only run one deployment at a time
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        # Replace YOUR_REPO_NAME below with your actual GitHub repository name
+        # e.g. if your repo URL is github.com/fabri/old-phone-pad
+        # set --base-href=/old-phone-pad/
+        run: npx ng build --configuration production --base-href=/old-phone-pad/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Angular 19+ outputs to dist/<project-name>/browser
+          path: dist/old-phone-pad/browser
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
