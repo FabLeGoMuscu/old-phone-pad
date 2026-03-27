@@ -1,5 +1,5 @@
 ﻿// =============================================================================
-//  old-phone-pad.service.spec.ts  —  Unit tests for OldPhonePadService
+//  old-phone-pad.service.spec.ts  —  Unit tests for OldPhonePadServicio
 //
 //  TESTING FRAMEWORK: Vitest (via Angular 21's @angular/build:unit-test)
 //  Vitest is Jest-compatible, so if you know Jest you already know this.
@@ -28,21 +28,9 @@
 //
 //   7. Key 0 — the space character output
 //
-//   8. Edge cases: empty input, key '1' (no letters), stop after '#', string too long string, bad data
+//   8. Edge cases: empty input, key ', string too long string, bad data1' (no letters), stop after '#'
 //
-//   9. KEYPAD_MAP constant check — verify the raw data is correct
-//
-//  STRUCTURE
-//  =========
-//  Tests are grouped with describe() nesting to mirror the use-case categories
-//  above.  This makes the output in the terminal much easier to scan:
-//
-//    OldPhonePadService
-//      provided examples
-//        ✓ OldPhonePad("33#") returns "E"
-//        ...
-//      cycling through letters
-//        ✓ key 2: A -> B -> C -> wraps to A
+//   9. KEYPAD_MAP constant check — 2: A -> B -> C -> wraps to A
 //        ...
 //
 //  CONVENIENCE ALIAS
@@ -96,9 +84,9 @@ describe('OldPhonePadService', () => {
   // ---------------------------------------------------------------------------
   //  GROUP 2 — SINGLE PRESS = FIRST LETTER
   //
-  //  One press of any key should always return the first letter of its group.
-  //  These tests individually verify every key in KEYPAD_MAP.
-
+  //  One press of any key   //
+  //  I use it.each() here to avoid writing 8 near-identical test blocks.
+  //  The format is: [input, expected]
   // ---------------------------------------------------------------------------
   describe('single press selects the first letter of each key', () => {
 
@@ -121,11 +109,9 @@ describe('OldPhonePadService', () => {
   //  GROUP 3 — CYCLING THROUGH LETTERS ON A SINGLE KEY
   //
   //  This group tests the core multi-press cycling behaviour:
-  //    press once  -> first letter
-  //    press twice -> second letter
-  //    etc.
-  //    press beyond max -> wraps back to first (the modulo trick)
-
+  //    pre //
+  //  I specifically test keys 7 and 9 (four letters each) because they are
+  //  the only keys that break the "3 letters per key" assumption.
   // ---------------------------------------------------------------------------
   describe('cycling through letters on a single key', () => {
 
@@ -202,6 +188,7 @@ describe('OldPhonePadService', () => {
   //
   //  When the user presses a DIFFERENT key after pressing one key,
   //  the algorithm automatically commits the previous character.
+  //  No space separator is needed between different keys.
   // ---------------------------------------------------------------------------
   describe('switching between different keys (no space needed)', () => {
 

@@ -154,7 +154,12 @@ npm test
 ```
 
 Tests are run with **Vitest** via the Angular 21 `@angular/build:unit-test` builder.
-All 30+ test cases should pass.
+All **47 tests** across 2 spec files should pass:
+
+| File | Tests |
+|------|-------|
+| `old-phone-pad.service.spec.ts` | 37 — algorithm unit tests |
+| `app.spec.ts` | 10 — component integration tests |
 
 ---
 

@@ -1,13 +1,12 @@
 ﻿// =============================================================================
 //  app.spec.ts  —  Integration tests for the AppComponent (root UI component)
-//  Author: Fabrizio
 //
 
 import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app';
+import { App } from './app';
 
 // =============================================================================
-describe('AppComponent', () => {
+describe('App', () => {
 
   // ---------------------------------------------------------------------------
   //  BeforeEach: set up a fresh TestBed for every single test.
@@ -18,7 +17,7 @@ describe('AppComponent', () => {
   // ---------------------------------------------------------------------------
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [App],
     }).compileComponents();
   });
 
@@ -30,8 +29,8 @@ describe('AppComponent', () => {
   //  etc.) this test catches it before anything else runs.
   // ---------------------------------------------------------------------------
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     expect(app).toBeTruthy();
   });
@@ -42,8 +41,8 @@ describe('AppComponent', () => {
   //  Makes sure the main heading text I put in the template is actually what
   //  gets rendered.  If I rename the app this would need updating.
   // ---------------------------------------------------------------------------
-  it('should render "Old Phone Pad Decoder" in the heading', async () => {
-    const fixture = TestBed.createComponent(AppComponent);
+  it('should render "Old Phone Pad" in the heading', async () => {
+    const fixture = TestBed.createComponent(App);
 
     // detectChanges() runs the first change-detection cycle, which:
     //   1. Evaluates all computed signals
@@ -55,7 +54,7 @@ describe('AppComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     // The heading might be h1 or h2, so I search the whole text content
-    expect(compiled.textContent).toContain('Old Phone Pad Decoder');
+    expect(compiled.textContent).toContain('Old Phone Pad');
   });
 
   // ---------------------------------------------------------------------------
@@ -66,13 +65,13 @@ describe('AppComponent', () => {
   //  if anything runs inadvertently during construction it could break the UX.
   // ---------------------------------------------------------------------------
   it('should start with empty inputSequence, no pressedKey, not isSent', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     // Reading a signal: call it like a function — app.inputSequence()
     // This is how Angular signals work: they are getter functions.
     expect(app.inputSequence()).toBe('');
-    expect(app.pressedKey()).toBeNull();
+    expect(app.pressedKey()).toBe('');
     expect(app.isSent()).toBe(false);
   });
 
@@ -85,8 +84,8 @@ describe('AppComponent', () => {
   //  twice in quick succession just appends).
   // ---------------------------------------------------------------------------
   it('should append to inputSequence when a digit key is pressed', async () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
     fixture.detectChanges();
 
     // Call the component's pressKey() method directly — same as if the user
@@ -107,8 +106,8 @@ describe('AppComponent', () => {
   //  computed should become true (because the sequence ends with '#').
   // ---------------------------------------------------------------------------
   it('should set isSent to true when "#" is pressed', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     app.pressKey('2');
     app.pressKey('#');
@@ -124,8 +123,8 @@ describe('AppComponent', () => {
   //  This simulates the user pressing the red "Clear" button.
   // ---------------------------------------------------------------------------
   it('should reset inputSequence and isSent after clearInput()', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     // Type something first
     app.pressKey('2');
@@ -151,8 +150,8 @@ describe('AppComponent', () => {
   //  glue code (runAllTests method) work together correctly.
   // ---------------------------------------------------------------------------
   it('should have all test cases passing after runAllTests()', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     app.runAllTests();
 
@@ -162,7 +161,7 @@ describe('AppComponent', () => {
     expect(cases.length).toBeGreaterThan(0);  // there are some test cases
 
     // Every single case must have passed
-    const allPassed = cases.every(c => c.passed === true);
+    const allPassed = cases.every((c: { passed?: boolean }) => c.passed === true);
     expect(allPassed).toBe(true);
   });
 
@@ -173,8 +172,8 @@ describe('AppComponent', () => {
   //  If the input already ends with '#', the decode is used as-is.
   // ---------------------------------------------------------------------------
   it('decodeManual() correctly decodes a sequence that has a "#"', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     // Set the manual input signal directly, then call the decode method
     app.manualInput.set('4433555 555666#');
@@ -191,8 +190,8 @@ describe('AppComponent', () => {
   //  append one automatically so the algorithm terminates correctly.
   // ---------------------------------------------------------------------------
   it('decodeManual() appends "#" automatically if missing', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     // No '#' at the end — the method should still work
     app.manualInput.set('4433555 555666');
@@ -208,8 +207,8 @@ describe('AppComponent', () => {
   //  whenever inputSequence changes.  This test verifies that reactivity.
   // ---------------------------------------------------------------------------
   it('liveDecoded() updates reactively when inputSequence changes', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as App;
 
     // Start empty
     expect(app.liveDecoded()).toBe('');

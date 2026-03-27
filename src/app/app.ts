@@ -1,39 +1,13 @@
 ﻿// =============================================================================
 //  app.ts  —  Root Angular component
-//  Author: Fabrizio
 //
 //  This is the single component that drives the whole UI.  I kept everything
 //  in one component deliberately — the app is small enough that splitting it
 //  into sub-components would add file-hopping overhead without any real gain.
 //
-//  ANGULAR SIGNALS (used throughout this file)
-//  ============================================
-//  Angular 21 uses a reactive primitive called a "signal" instead of the older
-//  RxJS-heavy approach.  Think of a signal as a smart variable:
-//
-//    const count = signal(0);    // create — wraps initial value 0
-//    count()                     // read   — call it like a function
-//    count.set(5)                // write  — replaces the value
-//    count.update(n => n + 1)    // update — derives new value from old
-//
-//  A `computed()` is a read-only signal whose value is automatically
-//  recalculated whenever any signal it reads changes.  Angular's change
-//  detection only re-renders the parts of the DOM that read a changed signal.
-//  Zero manual subscriptions, zero memory leaks.
-//
-//  I only used signals where the value changes over time and the template
-//  needs to react to it.  Static data (keypadButtons, conversionRows, etc.)
-//  is just a plain readonly class property — no signal needed.
-// =============================================================================
 
 import { Component, computed, signal, OnDestroy } from '@angular/core';
 import { OldPhonePadService } from './old-phone-pad.service';
-
-// =============================================================================
-//  INTERFACES
-//  I define these here rather than in a separate file since they are only used
-//  by this component.  Keeping them co-located makes the file self-contained.
-// =============================================================================
 
 /**
  * Represents one row in the Test Cases panel.
@@ -75,11 +49,6 @@ interface KeypadButton {
 })
 export class App implements OnDestroy {
 
-  // ===========================================================================
-  //  STATIC / READ-ONLY DATA
-  //  These never change after init, so plain readonly fields are fine.
-  //  No signals needed here.
-  // ===========================================================================
 
   /**
    * The 12 buttons rendered on the phone in reading order (left-to-right,
@@ -118,11 +87,6 @@ export class App implements OnDestroy {
    * I intentionally list keys 2-9 and 0, skipping '1' (no letters) and
    * skipping '*'/'#' (they are special keys, not letter keys).
    *
-   * Why maintain this separately from KEYPAD_MAP in the service?
-   * Because the service stores letters as a plain string ('ABC') which is
-   * ideal for index arithmetic, but the table needs them as separate cells.
-   * This small data transform here at the component level avoids leaking
-   * display concerns into the service layer.
    */
   readonly conversionRows: { key: string; letters: string[] }[] = [
     { key: '2', letters: ['A', 'B', 'C']           },
@@ -183,13 +147,6 @@ export class App implements OnDestroy {
     { input: 'DDDDDDDDDDDDDDDDD', expected: ''       },  // very long string without # = empty
   ]);
 
-  // ===========================================================================
-  //  REACTIVE STATE — INTERACTIVE PHONE
-  //
-  //  These signals track the live state of the simulated phone.  Each one is
-  //  directly tied to what the user sees on the phone's LCD screen.
-  // ===========================================================================
-
   /**
    * The raw key-press sequence the user has built up by clicking the on-screen
    * keypad buttons.  Spaces are inserted automatically by the 1-second timer
@@ -222,27 +179,7 @@ export class App implements OnDestroy {
     return OldPhonePadService.OldPhonePad(full);
   });
 
-  /**
-   * The single letter being "cycled" right now — the one the user is still
-   * building up by pressing the same key repeatedly.
-   *
-   * This is used to split liveDecoded into a "committed" portion and an
-   * "active" portion so I can apply different styling to the letter that is
-   * still in flux.
-   *
-   * How it works:
-   *  1. Look at the last character of inputSequence.
-   *  2. If it's not a letter key (i.e. the last press was '#', '*', or space)
-   *     there is nothing actively cycling, so return ''.
-   *  3. Otherwise count how many consecutive times that same key appears at
-   *     the END of the sequence (stopping at spaces or different keys) and
-   *     use the same (count-1) % length formula as the service.
-   *
-   * Example: inputSequence = "23322"
-   *   Last char = '2', consecutive '2's at end = 2
-   *   KEYPAD_MAP['2'] = 'ABC', index = (2-1) % 3 = 1 -> 'B'
-   *   currentPreview = 'B'
-   */
+
   readonly currentPreview = computed(() => {
     const seq = this.inputSequence();
     if (!seq) return '';
@@ -260,10 +197,7 @@ export class App implements OnDestroy {
    * Splits liveDecoded into two parts for the template:
    *   `done`   — the committed (finalised) characters
    *   `active` — the character currently being cycled (not yet committed)
-   *
-   * Why split?  Because in the real phone UX the "active" letter was shown
-   * with an underline or highlight to show it could still change.  I recreate
-   * that with a pulsing/underline CSS class on the active span.
+   
    *
    * Edge cases handled:
    *  - If nothing is being cycled (active = ''), everything goes into `done`.
@@ -299,9 +233,7 @@ export class App implements OnDestroy {
     return seq.length > 22 ? '...' + seq.slice(-21) : seq;
   });
 
-  // ===========================================================================
-  //  MANUAL INPUT PANEL STATE
-  // ===========================================================================
+
 
   /** The current value typed into the manual input text field. */
   readonly manualInput = signal('');
@@ -320,13 +252,6 @@ export class App implements OnDestroy {
    */
   readonly manualError = signal<string | null>(null);
 
-  // ===========================================================================
-  //  PRIVATE TIMING STATE
-  //
-  //  These are NOT signals because the template never reads them directly —
-  //  they are internal bookkeeping for the 1-second same-key separator logic.
-  //  Using plain properties is simpler and avoids unnecessary reactive overhead.
-  // ===========================================================================
 
   /**
    * After pressing a digit key, this stores that key's character so that if
@@ -415,10 +340,6 @@ export class App implements OnDestroy {
       // No timer needed — backspace is a discrete action
     }
 
-    // --- Handle digit keys ---------------------------------------------------
-    // If we are waiting on this same key (the 1s timer already fired), then
-    // the user paused long enough that this should be a NEW character.
-    // Insert a space separator first.
     if (this.awaitingSpaceForKey === key) {
       this.inputSequence.update(s => s + ' ' + key);
     } else {
@@ -426,8 +347,6 @@ export class App implements OnDestroy {
       this.inputSequence.update(s => s + key);
     }
 
-    // Reset the same-key wait — the previous awaitingSpaceForKey may have been
-    // for this key or a different one; either way it's now stale.
     this.awaitingSpaceForKey = '';
 
     // Start the 1-second timer.  If it fires before the user presses again,
@@ -506,11 +425,8 @@ export class App implements OnDestroy {
   /**
    * Runs every entry in testCases through OldPhonePad() and annotates each
    * one with the `result` and `passed` fields.
-   *
-   * I use signal.update() here rather than signal.set() because it lets me
-   * derive the new array from the current one with .map() — clean and
-   * immutable-style.  Angular detects the new array reference and re-renders
-   * the test list.
+   * After this runs, the template will show the results and badges in the Test
+   * Cases panel, and all cases should have passed = true.
    */
   runAllTests(): void {
     this.testCases.update(cases =>

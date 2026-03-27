@@ -64,6 +64,10 @@ export class OldPhonePadService {
     let currentKey = '';
     let pressCount = 0;
 
+    if(input.length > 500) {
+      throw new Error('Input exceeds maximum length of 500 characters.');
+    }
+
     /** Resolves the current key + press count into a character and resets state. */
     const commitCurrent = (): void => {
       if (currentKey && pressCount > 0) {
